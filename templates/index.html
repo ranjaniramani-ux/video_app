@@ -1,0 +1,595 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Language Video Generator</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: system-ui, "Segoe UI", Arial;
+    background: #eef3ff;
+    color: #0a1f44;
+  }
+
+  header {
+    background: #1f4bd8;
+    color: #fff;
+    padding: 20px 28px;
+  }
+  header h1 { margin: 0 0 4px; font-size: 1.5rem; }
+  header p  { margin: 0; font-size: .9rem; opacity: .85; }
+
+  .container { max-width: 1200px; margin: auto; padding: 20px; }
+
+  .card {
+    background: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 6px 18px rgba(0,0,0,.09);
+  }
+
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .toolbar label { font-weight: 600; font-size: .9rem; }
+
+  select {
+    padding: 8px 10px;
+    border: 1px solid #c5cee9;
+    border-radius: 8px;
+    font-size: .9rem;
+  }
+
+  button {
+    background: #1f4bd8;
+    color: #fff;
+    border: none;
+    padding: 9px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: .88rem;
+    transition: background .15s;
+  }
+  button:hover { background: #1640b8; }
+  button.secondary {
+    background: #fff;
+    color: #1f4bd8;
+    border: 1px solid #1f4bd8;
+  }
+  button.secondary:hover { background: #eef3ff; }
+  button.danger {
+    background: #fff;
+    color: #c0392b;
+    border: 1px solid #c0392b;
+    padding: 6px 10px;
+  }
+  button.danger:hover { background: #fff0ee; }
+
+  table { width: 100%; border-collapse: collapse; font-size: .88rem; margin-top: 8px; }
+  th, td { padding: 9px 10px; border-bottom: 1px solid #dde4f5; vertical-align: middle; }
+  th {
+    background: #eef2ff;
+    text-align: left;
+    font-weight: 600;
+    font-size: .82rem;
+    color: #3b4f8c;
+  }
+  td input {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid #c5cee9;
+    border-radius: 6px;
+    font-size: .88rem;
+  }
+  td input:focus { outline: 2px solid #1f4bd8; border-color: transparent; }
+  td input[readonly] { background: #f4f7ff; color: #3b4f8c; cursor: default; }
+
+  .status {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 5px;
+    font-size: .78rem;
+    font-weight: 500;
+  }
+  .status.ok   { background: #d4edda; color: #155724; }
+  .status.err  { background: #f8d7da; color: #721c24; }
+  .status.wait { background: #fff3cd; color: #856404; }
+
+  /* import panel */
+  #importPanel {
+    display: none;
+    margin-top: 14px;
+    padding: 14px;
+    background: #f4f7ff;
+    border-radius: 10px;
+    border: 1px solid #c5cee9;
+  }
+  #importPanel h3 { margin: 0 0 10px; font-size: .95rem; }
+  #importPanel .tabs { display: flex; gap: 6px; margin-bottom: 10px; }
+  #pasteArea {
+    width: 100%;
+    height: 90px;
+    padding: 8px;
+    font-size: .85rem;
+    border: 1px solid #c5cee9;
+    border-radius: 6px;
+    font-family: monospace;
+    resize: vertical;
+  }
+  #fileInput { display: none; }
+
+  .note { margin-top: 10px; font-size: .8rem; color: #555; }
+  .merge-row { margin-top: 14px; display: flex; align-items: center; gap: 10px; }
+
+  /* ── preview modal ── */
+  #previewOverlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.65);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+  }
+  #previewOverlay.open { display: flex; }
+
+  #previewBox {
+    background: #fff;
+    border-radius: 14px;
+    padding: 24px;
+    max-width: 680px;
+    width: 95%;
+    box-shadow: 0 20px 60px rgba(0,0,0,.3);
+    text-align: center;
+  }
+  #previewBox h2 { margin: 0 0 16px; font-size: 1.1rem; color: #0a1f44; }
+  #previewVideo {
+    width: 100%;
+    border-radius: 8px;
+    background: #000;
+  }
+  .preview-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 16px;
+  }
+  .preview-actions button { min-width: 130px; }
+</style>
+</head>
+<body>
+
+<header>
+<h1>Language Video Generator</h1>
+<p>Create vocabulary videos using images and translations</p>
+</header>
+
+<div class="container">
+<div class="card">
+
+  <!-- toolbar -->
+  <div class="toolbar">
+    <label for="lang">Target language:</label>
+    <select id="lang">
+      <option value="kannada">Kannada</option>
+      <option value="tamil">Tamil</option>
+      <option value="hindi">Hindi</option>
+      <option value="telugu">Telugu</option>
+      <option value="malayalam">Malayalam</option>
+    </select>
+    <button id="btnAdd">+ Add row</button>
+    <button id="btnTranslate">🌐 Translate all</button>
+    <button id="btnImport" class="secondary">📥 Import CSV / Excel</button>
+    <label>
+      <input type="checkbox" id="addLogo"> Add Logo
+    </label>
+  </div>
+
+  <!-- import panel -->
+  <div id="importPanel">
+    <h3>Import words</h3>
+    <div class="tabs">
+      <button class="secondary" id="tabPasteBtn">Paste from Excel / Sheets</button>
+      <button class="secondary" id="tabFileBtn">Upload .csv or .xlsx</button>
+    </div>
+    <div id="panePaste">
+      <p style="font-size:.82rem;color:#555;margin:0 0 6px">
+        Two columns: <strong>English word</strong> &amp; <strong>Image URL</strong> (tab-separated).
+      </p>
+      <textarea id="pasteArea" placeholder="Apple&#9;https://example.com/apple.jpg"></textarea>
+      <div style="margin-top:8px;display:flex;gap:8px">
+        <button id="btnProcessPaste">Import rows</button>
+        <button class="secondary" id="btnCancelImport">Cancel</button>
+      </div>
+    </div>
+    <div id="paneFile" style="display:none">
+      <p style="font-size:.82rem;color:#555;margin:0 0 6px">
+        Column 1 = English word, Column 2 = Image URL.
+      </p>
+      <button class="secondary" id="btnChooseFile">Choose file…</button>
+      <input type="file" id="fileInput" accept=".csv,.xlsx,.xls">
+      <span id="fileName" style="font-size:.83rem;color:#555;margin-left:8px"></span>
+      <div style="margin-top:8px;display:flex;gap:8px">
+        <button id="btnProcessFile">Import rows</button>
+        <button class="secondary" id="btnCancelFile">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- word table -->
+  <table>
+    <thead>
+      <tr>
+        <th style="width:17%">English word</th>
+        <th style="width:17%">Translation</th>
+        <th style="width:17%">Transliteration</th>
+        <th style="width:29%">Image URL</th>
+        <th style="width:12%">Preview / Download</th>
+        <th style="width:8%">Remove</th>
+      </tr>
+    </thead>
+    <tbody id="rowsBody"></tbody>
+  </table>
+
+  <div class="note" id="note">You can add up to 10 words. (0/10 used)</div>
+
+  <div class="merge-row">
+    <button id="btnMerge">🔀 Merge all into one video</button>
+    <span id="mergeStatus" style="font-size:.83rem;color:#555"></span>
+  </div>
+
+</div>
+</div>
+
+<!-- ── video preview modal ── -->
+<div id="previewOverlay">
+<div id="previewBox">
+  <h2 id="previewTitle">Preview</h2>
+  <video id="previewVideo" controls playsinline></video>
+  <div class="preview-actions">
+    <button id="btnDownloadFromPreview">⬇ Download</button>
+    <button class="secondary" id="btnClosePreview">Close</button>
+  </div>
+</div>
+</div>
+
+<script>
+// ── state ─────────────────────────────────────────────────────────────────────
+const MAX_ROWS = 10;
+const tbody    = document.getElementById("rowsBody");
+const note     = document.getElementById("note");
+let   previewUrl   = null;   // blob URL of the currently previewed video
+let   previewWord  = "";     // english word for the filename
+
+// ── helpers ───────────────────────────────────────────────────────────────────
+function updateNote() {
+note.textContent =
+  `You can add up to 10 words. (${tbody.children.length}/${MAX_ROWS} used)`;
+}
+
+function esc(s) {
+return String(s || "")
+  .replace(/&/g, "&amp;")
+  .replace(/"/g, "&quot;");
+}
+
+function rowData(tr) {
+const inputs = tr.querySelectorAll("input");
+return {
+  english:         inputs[0].value.trim(),
+  translated:      inputs[1].value.trim(),
+  transliteration: inputs[2].value.trim(),
+  image:           inputs[3].value.trim(),
+};
+}
+
+function setStatus(td, type, text) {
+td.innerHTML = `<span class="status ${type}">${text}</span>`;
+}
+
+// ── rows ──────────────────────────────────────────────────────────────────────
+function addRow(english, translated, transliteration, image) {
+if (tbody.children.length >= MAX_ROWS) {
+  alert("Maximum 10 words allowed.");
+  return;
+}
+const tr = document.createElement("tr");
+tr.innerHTML = `
+  <td><input placeholder="e.g. Apple"          value="${esc(english)}"></td>
+  <td><input placeholder="Auto-generated"       value="${esc(translated)}"      readonly></td>
+  <td><input placeholder="Auto-generated"       value="${esc(transliteration)}" readonly></td>
+  <td><input placeholder="https://…/image.jpg"  value="${esc(image)}"></td>
+  <td class="dlCell"><button class="btnPreview">▶ Preview</button></td>
+  <td><button class="danger btnRm">✕</button></td>
+`;
+tbody.appendChild(tr);
+updateNote();
+}
+
+tbody.addEventListener("click", function(e) {
+if (e.target.classList.contains("btnRm")) {
+  e.target.closest("tr").remove();
+  updateNote();
+}
+if (e.target.classList.contains("btnPreview")) {
+  generateAndPreview(e.target);
+}
+});
+
+document.getElementById("btnAdd").addEventListener("click", function() {
+addRow("", "", "", "");
+});
+
+// Start with one blank row
+addRow("", "", "", "");
+
+// ── translate ─────────────────────────────────────────────────────────────────
+document.getElementById("btnTranslate").addEventListener("click", translateAll);
+
+async function translateAll() {
+const language = document.getElementById("lang").value;
+
+for (const tr of Array.from(tbody.children)) {
+  const inputs  = tr.querySelectorAll("input");
+  const english = inputs[0].value.trim();
+  if (!english) continue;
+
+  inputs[1].removeAttribute("readonly");
+  inputs[2].removeAttribute("readonly");
+  inputs[1].value = "Translating…";
+  inputs[2].value = "";
+
+  try {
+    const res = await fetch("/translate", {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ english_word: english, language }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    inputs[1].value = data.translated      || "";
+    inputs[2].value = data.transliteration || "";
+  } catch (err) {
+    inputs[1].value = "ERROR";
+    console.error("Translation error:", err);
+  } finally {
+    inputs[1].setAttribute("readonly", true);
+    inputs[2].setAttribute("readonly", true);
+  }
+}
+}
+
+// ── generate + preview ────────────────────────────────────────────────────────
+async function generateAndPreview(btn) {
+const tr   = btn.closest("tr");
+const dlTd = tr.querySelector(".dlCell");
+const d    = rowData(tr);
+
+if (!d.english) {
+  alert("Please enter an English word.");
+  return;
+}
+if (!d.translated) {
+  alert("Please click 'Translate all' first.");
+  return;
+}
+if (!d.image) {
+  alert("Please enter a public image URL (must start with https://).");
+  return;
+}
+
+setStatus(dlTd, "wait", "Generating…");
+
+try {
+  const res = await fetch("/generate", {
+    method:  "POST",
+    headers: { "Content-Type": "application/json" },
+    body:    JSON.stringify({
+      english_word:    d.english,
+      translated_word: d.translated,
+      transliteration: d.transliteration,
+      image_url:       d.image,
+      language:        document.getElementById("lang").value,
+    }),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(err.error || res.statusText);
+  }
+
+  const blob = await res.blob();
+
+  // revoke previous preview URL to free memory
+  if (previewUrl) URL.revokeObjectURL(previewUrl);
+  previewUrl  = URL.createObjectURL(blob);
+  previewWord = d.english;
+
+  // show preview modal
+  document.getElementById("previewTitle").textContent =
+    `Preview — ${d.english} → ${d.translated}`;
+  document.getElementById("previewVideo").src = previewUrl;
+  document.getElementById("previewVideo").load();
+  document.getElementById("previewOverlay").classList.add("open");
+
+  setStatus(dlTd, "ok", "▶ Preview");
+  setTimeout(function() {
+    dlTd.innerHTML = '<button class="btnPreview">▶ Preview</button>';
+  }, 2000);
+
+} catch (err) {
+  setStatus(dlTd, "err", "Failed ✗");
+  alert("Video generation failed: " + err.message +
+        "\n\nCheck that:\n1. Flask is running (python3 server.py)\n2. Image URL starts with https://");
+  setTimeout(function() {
+    dlTd.innerHTML = '<button class="btnPreview">▶ Preview</button>';
+  }, 3000);
+}
+}
+
+// ── preview modal controls ────────────────────────────────────────────────────
+document.getElementById("btnDownloadFromPreview").addEventListener("click", function() {
+if (!previewUrl) return;
+const a    = document.createElement("a");
+a.href     = previewUrl;
+a.download = previewWord + ".mp4";
+a.click();
+});
+
+document.getElementById("btnClosePreview").addEventListener("click", closePreview);
+
+document.getElementById("previewOverlay").addEventListener("click", function(e) {
+if (e.target === this) closePreview();   // click outside box closes it
+});
+
+function closePreview() {
+const overlay = document.getElementById("previewOverlay");
+const video   = document.getElementById("previewVideo");
+overlay.classList.remove("open");
+video.pause();
+}
+
+// ── merge ─────────────────────────────────────────────────────────────────────
+document.getElementById("btnMerge").addEventListener("click", mergeVideos);
+const addLogo = document.getElementById("addLogo").checked;
+async function mergeVideos() {
+const language    = document.getElementById("lang").value;
+const mergeStatus = document.getElementById("mergeStatus");
+const payload     = [];
+const addLogo = document.getElementById("addLogo").checked;
+
+for (const tr of Array.from(tbody.children)) {
+  const d = rowData(tr);
+  if (!d.english || !d.image) continue;
+  payload.push({
+    english_word:    d.english,
+    translated_word: d.translated,
+    transliteration: d.transliteration,
+    image_url:       d.image,
+    language,
+    add_logo: addLogo
+  });
+}
+
+if (payload.length === 0) {
+  alert("No valid rows. Fill in English words and Image URLs, then Translate.");
+  return;
+}
+
+mergeStatus.textContent = "Generating merged video… (this may take a minute)";
+
+try {
+  const res = await fetch("/merge", {
+    method:  "POST",
+    headers: { "Content-Type": "application/json" },
+    body:    JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(err.error || res.statusText);
+  }
+
+  const blob = await res.blob();
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  a.href     = url;
+  a.download = "merged.mp4";
+  a.click();
+  URL.revokeObjectURL(url);
+  mergeStatus.textContent = "Merged video downloaded ✓";
+
+} catch (err) {
+  mergeStatus.textContent = "Merge failed: " + err.message;
+}
+}
+
+// ── import panel ──────────────────────────────────────────────────────────────
+const importPanel = document.getElementById("importPanel");
+
+document.getElementById("btnImport").addEventListener("click", function() {
+importPanel.style.display =
+  importPanel.style.display === "none" ? "block" : "none";
+showTab("paste");
+});
+
+document.getElementById("btnCancelImport").addEventListener("click", closeImport);
+document.getElementById("btnCancelFile").addEventListener("click",   closeImport);
+document.getElementById("tabPasteBtn").addEventListener("click", function() { showTab("paste"); });
+document.getElementById("tabFileBtn").addEventListener("click",  function() { showTab("file"); });
+
+function closeImport() { importPanel.style.display = "none"; }
+
+function showTab(tab) {
+document.getElementById("panePaste").style.display = tab === "paste" ? "" : "none";
+document.getElementById("paneFile").style.display  = tab === "file"  ? "" : "none";
+}
+
+document.getElementById("btnProcessPaste").addEventListener("click", function() {
+const raw = document.getElementById("pasteArea").value.trim();
+if (!raw) return;
+const rows = Papa.parse(raw, { delimiter: "\t", skipEmptyLines: true }).data;
+importRows(rows);
+closeImport();
+});
+
+document.getElementById("btnChooseFile").addEventListener("click", function() {
+document.getElementById("fileInput").click();
+});
+
+document.getElementById("fileInput").addEventListener("change", function() {
+document.getElementById("fileName").textContent =
+  this.files[0] ? this.files[0].name : "";
+});
+
+document.getElementById("btnProcessFile").addEventListener("click", function() {
+const file = document.getElementById("fileInput").files[0];
+if (!file) { alert("Please choose a file first."); return; }
+const reader = new FileReader();
+if (file.name.toLowerCase().endsWith(".csv")) {
+  reader.onload = function(e) {
+    importRows(Papa.parse(e.target.result, { skipEmptyLines: true }).data);
+    closeImport();
+  };
+  reader.readAsText(file);
+} else {
+  reader.onload = function(e) {
+    const wb   = XLSX.read(new Uint8Array(e.target.result), { type: "array" });
+    const ws   = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
+    importRows(rows);
+    closeImport();
+  };
+  reader.readAsArrayBuffer(file);
+}
+});
+
+function importRows(rows) {
+var added = 0;
+for (var i = 0; i < rows.length; i++) {
+  var word = String(rows[i][0] || "").trim();
+  var img  = String(rows[i][1] || "").trim();
+  if (!word) continue;
+  if (word.toLowerCase() === "word" || word.toLowerCase() === "english") continue;
+  if (tbody.children.length >= MAX_ROWS) {
+    alert("Only " + MAX_ROWS + " rows allowed. Some rows skipped.");
+    break;
+  }
+  addRow(word, "", "", img);
+  added++;
+}
+if (added > 0) updateNote();
+}
+</script>
+</body>
+</html>

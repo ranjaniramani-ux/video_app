@@ -1,0 +1,7 @@
+flask
+moviepy
+gtts
+pillow
+requests
+deep-translator
+indic-transliteration
