@@ -12,6 +12,9 @@ import subprocess
 import uuid
 import sys
 import os
+import imageio_ffmpeg
+
+os.environ["IMAGEIO_FFMPEG_EXE"] = imageio_ffmpeg.get_ffmpeg_exe()
 
 app = Flask(__name__)
 
