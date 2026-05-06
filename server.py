@@ -15,6 +15,7 @@ import os
 
 app = Flask(__name__)
 
+print("🔥 NEW SERVER VERSION LOADED 🔥")
 
 @app.route("/")
 def home():
