@@ -15,20 +15,6 @@ import os
 
 app = Flask(__name__)
 
-@app.route("/translate", methods=["POST"])
-def translate():
-    data = request.get_json()
-
-    english_word = data.get("english_word", "").strip()
-
-    translated_word = GoogleTranslator(
-        source="auto",
-        target="ta"
-    ).translate(english_word)
-
-    return jsonify({
-        "translated_word": translated_word
-    })
 
 @app.route("/")
 def home():
