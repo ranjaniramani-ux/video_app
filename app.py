@@ -126,13 +126,13 @@ def make_video(
 
     # centered horizontally, near bottom
     x_position = (1280 - text_width) // 2
-    y_position = 690  # adjust slightly if needed
+    y_position = 660  # adjust slightly if needed
 
     draw.text(
         (x_position, y_position),
         disclaimer_text,
         font=font_disclaimer,
-        fill="#bbbbbb",          # soft grey (subtle)
+        fill="white",          # soft grey (subtle)
         stroke_width=1,
         stroke_fill="black"      # improves readability
     )
