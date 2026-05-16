@@ -61,7 +61,7 @@ def make_video(
 
     img = Image.open(tmp_img)
     print(f"      Original size: {img.size}, mode: {img.mode}")
-    base = img.convert("RGB").resize((1280, 720))
+    base = img.convert("RGB").resize((854, 480))
 
     # overlay = Image.new("RGBA", (1280, 720), (0, 0, 0, 0))
     # bar     = Image.new("RGBA", (1280, 180), (0, 0, 0, 100))  # 👈 lighter
@@ -178,7 +178,7 @@ def make_video(
 
         logo = MPImageClip("logo.png") \
             .with_duration(clip.duration) \
-            .resized(height=80) \
+            .resized(height=50) \
             .with_position(("right", "top"))
 
         clip = CompositeVideoClip([clip, logo])
@@ -187,7 +187,7 @@ def make_video(
 
     clip.write_videofile(
         output_file,
-        fps=24,
+        fps=15,
         codec="libx264",
         audio_codec="aac",
         logger="bar"

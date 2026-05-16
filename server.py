@@ -147,7 +147,8 @@ def generate():
                 english, translated, transliteration,
                 image_url, output, font_file, LATIN_FONT,
             ],
-            capture_output=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
             text=True,
             timeout=180,
         )
@@ -220,7 +221,8 @@ def merge():
                     image_url, clip_out, font_file, LATIN_FONT,
                     str(add_logo) 
                 ],
-                capture_output=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
                 text=True,
                 timeout=180,
             )
