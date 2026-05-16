@@ -15,7 +15,7 @@ from PIL import Image, ImageDraw, ImageFont
 from gtts import gTTS
 
 FONT_CACHE = {}
-
+print("VIDEO WORKER STARTED", flush=True)
 
 def get_font(font_file, size):
     key = (font_file, size)
@@ -190,7 +190,7 @@ def make_video(
         fps=24,
         codec="libx264",
         audio_codec="aac",
-        logger=None
+        logger="bar"
     )
 
     speech.close()

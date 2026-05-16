@@ -118,6 +118,7 @@ def translate_route():
 
 @app.route("/generate", methods=["POST"])
 def generate():
+    print("GENERATE ROUTE HIT", flush=True)
     data = request.get_json(force=True)
 
     english         = (data.get("english_word")    or "").strip()
@@ -135,9 +136,9 @@ def generate():
     font_file = LANG_FONT.get(language, "NotoSansTamil-Regular.ttf")
     output    = f"{uuid.uuid4()}.mp4"
 
-    print(f"\nGenerating video: {english} → {translated} | {transliteration}")
-    print(f"  image: {image_url}")
-    print(f"  font:  {font_file}")
+    print(f"\nGenerating video: {english} → {translated} | {transliteration}", flush=True)
+    print(f"  image: {image_url}", flush=True)
+    print(f"  font:  {font_file}", flush=True)
 
     try:
         result = subprocess.run(
@@ -151,7 +152,7 @@ def generate():
             timeout=180,
         )
 
-        print("WORKER STDOUT:", result.stdout)
+        print("WORKER STDOUT:", result.stdout, flush=True)
         if result.stderr:
             print("WORKER STDERR:", result.stderr)
 
@@ -167,7 +168,11 @@ def generate():
     except subprocess.TimeoutExpired:
         return jsonify({"error": "Video generation timed out after 3 minutes"}), 500
     except Exception as e:
+        import traceback
+        traceback.print_exc()
+        print("MERGE EXCEPTION:", str(e), flush=True)
         return jsonify({"error": str(e)}), 500
+        
     finally:
         try:
             os.remove(output)
@@ -179,9 +184,10 @@ def generate():
 
 def merge():
     data = request.get_json(force=True)
+    print("MERGE ROUTE HIT", flush=True)
     
    
-    print("MERGE INPUT:", data)
+    print("MERGE INPUT:", data, flush=True)
     if not isinstance(data, list) or len(data) == 0:
         return jsonify({"error": "Expected a non-empty list"}), 400
 
@@ -241,7 +247,11 @@ def merge():
         return send_file(output, as_attachment=True, download_name="merged.mp4")
 
     except Exception as e:
+        import traceback
+        traceback.print_exc()
+        print("MERGE EXCEPTION:", str(e), flush=True)
         return jsonify({"error": str(e)}), 500
+        
     finally:
         for c in clips:
             try:
