@@ -237,14 +237,24 @@ def merge():
             print("STDOUT:", result.stdout)
             print("STDERR:", result.stderr)
 
-        from moviepy import VideoFileClip, concatenate_videoclips
-        video_clips = [VideoFileClip(c) for c in clips]
-        final       = concatenate_videoclips(video_clips)
-        final.write_videofile(output, codec="libx264", audio_codec="aac")
+        # Create ffmpeg concat file
+        concat_file = "concat_list.txt"
 
-        for vc in video_clips:
-            vc.close()
-        final.close()
+        with open(concat_file, "w", encoding="utf-8") as f:
+            for clip in clips:
+                f.write(f"file '{clip}'\n")
+
+        # Merge using ffmpeg (MUCH lower RAM usage)
+        subprocess.run([
+            "ffmpeg",
+            "-f", "concat",
+            "-safe", "0",
+            "-i", concat_file,
+            "-c", "copy",
+            output
+        ], check=True)
+
+        os.remove(concat_file)
 
         return send_file(output, as_attachment=True, download_name="merged.mp4")
 

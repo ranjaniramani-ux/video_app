@@ -140,7 +140,7 @@ def make_video(
     )
 
     tmp_frame = f"frame_tmp_{os.getpid()}.jpg"
-    base.save(tmp_frame, quality=95)
+    base.save(tmp_frame, quality=75)
     os.remove(tmp_img)
     print("      Frame saved.")
 
@@ -192,8 +192,11 @@ def make_video(
         fps=15,
         codec="libx264",
         audio_codec="aac",
+        bitrate="800k",
+        preset="ultrafast",
         logger="bar"
     )
+    final_audio.close()
 
     speech.close()
     clip.close()
