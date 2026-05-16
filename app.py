@@ -126,7 +126,9 @@ def make_video(
 
     # centered horizontally, near bottom
     x_position = (1280 - text_width) // 2
-    y_position = 660  # adjust slightly if needed
+    video_height = 480
+    y_position = video_height - text_height - 10
+    
 
     draw.text(
         (x_position, y_position),
