@@ -125,7 +125,7 @@ def make_video(
     text_height = bbox[3] - bbox[1]
 
     # centered horizontally, near bottom
-    x_position = (1280 - text_width) // 2
+    x_position = (854 - text_width) // 2
     video_height = 480
     y_position = video_height - text_height - 10
     
