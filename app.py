@@ -162,7 +162,7 @@ def make_video(
     speech = AudioFileClip(tmp_audio)
 
     # slow down speech
-    speech = speech.with_speed_scaled(0.85)
+    
     # speech = speech.fx(lambda clip: clip.with_speed_scaled(0.7))
     # speech = speech.with_speed_scaled(0.7)
 
