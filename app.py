@@ -149,7 +149,7 @@ def make_video(
 
     tts = gTTS(
         text=f"{english_word}. {english_word}. {english_word}.",
-        lang="en"
+        lang="en",
         # for indian accent
         tld="co.in"
     )
