@@ -150,6 +150,8 @@ def make_video(
     tts = gTTS(
         text=f"{english_word}. {english_word}. {english_word}.",
         lang="en"
+        # for indian accent
+        tld="co.in"
     )
     tts.save(tmp_audio)
     print("      Audio saved.")
@@ -160,17 +162,18 @@ def make_video(
     speech = AudioFileClip(tmp_audio)
 
     # slow down speech
+    speech = speech.with_speed_scaled(0.85)
     # speech = speech.fx(lambda clip: clip.with_speed_scaled(0.7))
     # speech = speech.with_speed_scaled(0.7)
 
-    silence = AudioClip(lambda t: 0, duration=5)
+    silence = AudioClip(lambda t: 0, duration=3)
 
   
 
     # speech = AudioFileClip(tmp_audio)
     # silence = AudioClip(lambda t: 0, duration=5)
-    final_audio = CompositeAudioClip([silence, speech.with_start(5)])
-    total_duration = 5 + speech.duration
+    final_audio = CompositeAudioClip([silence, speech.with_start(3)])
+    total_duration = 3 + speech.duration
 
     clip = ImageClip(tmp_frame).with_duration(total_duration)
 
