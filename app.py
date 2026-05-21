@@ -76,31 +76,31 @@ def make_video(
     font_roman = get_font(latin_font, 40)
     font_eng = get_font(latin_font, 48)
     
-    # Draw English word + dash
-    top_text = f"{english_word.upper()} -"
+    # # Draw English word + dash
+    # top_text = f"{english_word.upper()} -"
 
-    draw.text(
-        (40, 30),
-        top_text,
-        font=font_eng,
-        fill="white",
-        stroke_width=2,
-        stroke_fill="black"
-    )
+    # draw.text(
+    #     (40, 30),
+    #     top_text,
+    #     font=font_eng,
+    #     fill="white",
+    #     stroke_width=2,
+    #     stroke_fill="black"
+    # )
 
-    # Calculate width of English text
-    bbox = draw.textbbox((40, 30), top_text, font=font_eng)
-    text_width = bbox[2] - bbox[0]
+    # # Calculate width of English text
+    # bbox = draw.textbbox((40, 30), top_text, font=font_eng)
+    # text_width = bbox[2] - bbox[0]
 
-    # Draw translated word right next to it
-    draw.text(
-        (40 + text_width + 10, 30),   # 👈 spacing after English
-        translated_word,
-        font=font_native,
-        fill="white",
-        stroke_width=2,
-        stroke_fill="black"
-    )
+    # # Draw translated word right next to it
+    # draw.text(
+    #     (40 + text_width + 10, 30),   # 👈 spacing after English
+    #     translated_word,
+    #     font=font_native,
+    #     fill="white",
+    #     stroke_width=2,
+    #     stroke_fill="black"
+    # )
     
 
     # # Transliteration
@@ -113,6 +113,63 @@ def make_video(
     #         stroke_width=1,
     #         stroke_fill="black"
     #     )
+    
+    # ===== AUTO-SCALING TITLE =====
+
+    eng_size = 48
+    native_size = 66
+
+    max_width = 760   # safe width inside 854px video
+
+    while True:
+        font_eng = get_font(latin_font, eng_size)
+        font_native = get_font(font_file, native_size)
+
+        top_text = f"{english_word.upper()} -"
+
+        # measure English text
+        eng_bbox = draw.textbbox((0, 0), top_text, font=font_eng)
+        eng_width = eng_bbox[2] - eng_bbox[0]
+
+        # measure translated text
+        native_bbox = draw.textbbox((0, 0), translated_word, font=font_native)
+        native_width = native_bbox[2] - native_bbox[0]
+
+        total_width = eng_width + native_width + 20
+
+        # stop shrinking once it fits
+        if total_width <= max_width:
+            break
+
+        eng_size -= 2
+        native_size -= 2
+
+        # prevent fonts becoming too tiny
+        if eng_size < 26 or native_size < 34:
+            break
+
+    # draw English word
+    draw.text(
+        (40, 30),
+        top_text,
+        font=font_eng,
+        fill="white",
+        stroke_width=2,
+        stroke_fill="black"
+    )
+
+    # draw translated word beside it
+    draw.text(
+        (40 + eng_width + 10, 30),
+        translated_word,
+        font=font_native,
+        fill="white",
+        stroke_width=2,
+        stroke_fill="black"
+    )
+
+    # transliteration font
+    font_roman = get_font(latin_font, 40)
     
     # ===== DISCLAIMER TEXT =====
     disclaimer_text = "© Learning Matters | Images: Unsplash | Educational Use Only"
