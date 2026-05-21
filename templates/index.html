@@ -183,14 +183,14 @@
       <option value="kannada">Kannada</option>
       <option value="tamil">Tamil</option>
       <option value="hindi">Hindi</option>
-      <option value="telugu">Telugu</option>
-      <option value="malayalam">Malayalam</option>
     </select>
     <button id="btnAdd">+ Add row</button>
     <button id="btnTranslate">🌐 Translate all</button>
+    <!-- Remove Import button 
     <button id="btnImport" class="secondary">📥 Import CSV / Excel</button>
+    -->
     <label>
-      <input type="checkbox" id="addLogo"> Add Logo
+      <input type="checkbox" id="addLogo"> Add LM Logo
     </label>
   </div>
 
@@ -463,6 +463,13 @@ video.pause();
 document.getElementById("btnMerge").addEventListener("click", mergeVideos);
 const addLogo = document.getElementById("addLogo").checked;
 async function mergeVideos() {
+
+const mergeBtn = document.getElementById("btnMerge");
+mergeBtn.disabled = true;
+mergeBtn.innerText = "Merging...";
+mergeBtn.style.opacity = "0.6";
+mergeBtn.style.cursor = "not-allowed";
+
 const language    = document.getElementById("lang").value;
 const mergeStatus = document.getElementById("mergeStatus");
 const payload     = [];
@@ -508,6 +515,10 @@ try {
   a.click();
   URL.revokeObjectURL(url);
   mergeStatus.textContent = "Merged video downloaded ✓";
+  mergeBtn.disabled = false;
+  mergeBtn.innerText = "Merge";
+  mergeBtn.style.opacity = "1";
+  mergeBtn.style.cursor = "pointer";
 
 } catch (err) {
   mergeStatus.textContent = "Merge failed: " + err.message;
