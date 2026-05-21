@@ -363,8 +363,7 @@ for (const tr of Array.from(tbody.children)) {
     inputs[1].value = "ERROR";
     console.error("Translation error:", err);
   } finally {
-    inputs[1].setAttribute("readonly", true);
-    inputs[2].setAttribute("readonly", true);
+    // Keep fields editable so users can correct translations manually
   }
 }
 }
