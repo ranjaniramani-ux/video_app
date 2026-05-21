@@ -148,7 +148,7 @@ def make_video(
     tmp_audio = f"voice_tmp_{os.getpid()}.mp3"
 
     tts = gTTS(
-        text=f"{english_word}. {english_word}. {english_word}.",
+        text=f"{english_word}. ... {english_word}. ... {english_word}.",
         lang="en",
         # for indian accent
         tld="co.in"
