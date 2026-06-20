@@ -114,79 +114,86 @@ def make_video(
     #         stroke_fill="black"
     #     )
     
-    # ===== AUTO-SCALING TITLE =====
+    # ===== HYBRID TITLE LAYOUT =====
 
     eng_size = 48
     native_size = 66
 
-    max_width = 760   # safe width inside 854px video
+    max_width = 760
 
     while True:
         font_eng = get_font(latin_font, eng_size)
         font_native = get_font(font_file, native_size)
 
-        # top_text = f"{english_word.upper()} -"
-        english_text = english_word.upper()
-        translit_text = f" ({transliteration}) -"
-        
-        # measure English text
-        #eng_bbox = draw.textbbox((0, 0), top_text, font=font_eng)
-        #eng_width = eng_bbox[2] - eng_bbox[0]
-        eng_bbox = draw.textbbox((0, 0), english_text, font=font_eng)
-        eng_width = eng_bbox[2] - eng_bbox[0]
-        
-        # measure Transliteration text
-        trans_bbox = draw.textbbox((0, 0), translit_text, font=font_native)
-        trans_width = trans_bbox[2] - trans_bbox[0] 
+        one_line = (
+            f"{english_word.upper()} "
+            f"({transliteration}) - "
+            f"{translated_word}"
+        )
 
-        # measure translated text
-        native_bbox = draw.textbbox((0, 0), translated_word, font=font_native)
-        native_width = native_bbox[2] - native_bbox[0]
+        bbox = draw.textbbox((0, 0), one_line, font=font_eng)
+        line_width = bbox[2] - bbox[0]
 
-        total_width = eng_width + trans_width + native_width + 20
-
-        # stop shrinking once it fits
-        if total_width <= max_width:
+        if line_width <= max_width:
             break
 
         eng_size -= 2
-        native_size -= 2
 
-        # prevent fonts becoming too tiny
-        if eng_size < 26 or native_size < 34:
+        if eng_size < 24:
             break
 
-    # Draw English word
-    draw.text(
-        (40, 30),
-        english_text,
-        font=font_eng,
-        fill="white",
-        stroke_width=2,
-        stroke_fill="black"
+    # Recalculate with final font size
+    font_eng = get_font(latin_font, eng_size)
+    font_native = get_font(font_file, native_size)
+
+    one_line = (
+        f"{english_word.upper()} "
+        f"({transliteration}) - "
+        f"{translated_word}"
     )
 
-    # Draw transliteration in brackets
-    draw.text(
-        (40 + eng_width + 5, 30),
-        translit_text,
-        font=font_native,
-        fill="white",
-        stroke_width=2,
-        stroke_fill="black"
-    )
+    bbox = draw.textbbox((0, 0), one_line, font=font_eng)
+    line_width = bbox[2] - bbox[0]
 
-    # Draw translation after dash
-    draw.text(
-        (40 + eng_width + trans_width + 10, 30),
-        translated_word,
-        font=font_native,
-        fill="white",
-        stroke_width=2,
-        stroke_fill="black"
-    )
+    single_line = line_width <= max_width
 
-    # transliteration font
+    if single_line:
+
+        draw.text(
+            (40, 30),
+            one_line,
+            font=font_eng,
+            fill="white",
+            stroke_width=2,
+            stroke_fill="black"
+        )
+
+    else:
+
+        line1 = (
+            f"{english_word.upper()} "
+            f"({transliteration})"
+        )
+
+        draw.text(
+            (40, 30),
+            line1,
+            font=font_eng,
+            fill="white",
+            stroke_width=2,
+            stroke_fill="black"
+        )
+
+        draw.text(
+            (40, 95),
+            translated_word,
+            font=font_native,
+            fill="white",
+            stroke_width=2,
+            stroke_fill="black"
+        )
+
+    # transliteration font for lower section if needed elsewhere
     font_roman = get_font(latin_font, 40)
     
     # ===== DISCLAIMER TEXT =====
