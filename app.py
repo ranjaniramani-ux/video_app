@@ -125,17 +125,25 @@ def make_video(
         font_eng = get_font(latin_font, eng_size)
         font_native = get_font(font_file, native_size)
 
-        top_text = f"{english_word.upper()} -"
-
+        # top_text = f"{english_word.upper()} -"
+        english_text = english_word.upper()
+        translit_text = f" ({transliteration}) -"
+        
         # measure English text
-        eng_bbox = draw.textbbox((0, 0), top_text, font=font_eng)
+        #eng_bbox = draw.textbbox((0, 0), top_text, font=font_eng)
+        #eng_width = eng_bbox[2] - eng_bbox[0]
+        eng_bbox = draw.textbbox((0, 0), english_text, font=font_eng)
         eng_width = eng_bbox[2] - eng_bbox[0]
+        
+        # measure Transliteration text
+        trans_bbox = draw.textbbox((0, 0), translit_text, font=font_native)
+        trans_width = trans_bbox[2] - trans_bbox[0] 
 
         # measure translated text
         native_bbox = draw.textbbox((0, 0), translated_word, font=font_native)
         native_width = native_bbox[2] - native_bbox[0]
 
-        total_width = eng_width + native_width + 20
+        total_width = eng_width + trans_width + native_width + 20
 
         # stop shrinking once it fits
         if total_width <= max_width:
@@ -148,19 +156,29 @@ def make_video(
         if eng_size < 26 or native_size < 34:
             break
 
-    # draw English word
+    # Draw English word
     draw.text(
         (40, 30),
-        top_text,
+        english_text,
         font=font_eng,
         fill="white",
         stroke_width=2,
         stroke_fill="black"
     )
 
-    # draw translated word beside it
+    # Draw transliteration in brackets
     draw.text(
-        (40 + eng_width + 10, 30),
+        (40 + eng_width + 5, 30),
+        translit_text,
+        font=font_native,
+        fill="white",
+        stroke_width=2,
+        stroke_fill="black"
+    )
+
+    # Draw translation after dash
+    draw.text(
+        (40 + eng_width + trans_width + 10, 30),
         translated_word,
         font=font_native,
         fill="white",
