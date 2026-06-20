@@ -142,38 +142,35 @@ def make_video(
         if eng_size < 24:
             break
 
-    # Recalculate with final font size
-    font_eng = get_font(latin_font, eng_size)
-    font_native = get_font(font_file, native_size)
+        # Recalculate with final font size
+        font_eng = get_font(latin_font, eng_size)
+        font_native = get_font(font_file, native_size)
 
-    one_line = (
-        f"{english_word.upper()} "
-        f"({transliteration}) - "
-        f"{translated_word}"
-    )
+        eng_size = 40
+        native_size = 40
 
-    bbox = draw.textbbox((0, 0), one_line, font=font_eng)
-    line_width = bbox[2] - bbox[0]
+        font_eng = get_font(latin_font, eng_size)
+        font_native = get_font(font_file, native_size)
 
-    single_line = line_width <= max_width
+        english_text = english_word.upper()
+        translit_text = f" ({transliteration}) -"
 
-    if single_line:
+        # Measure widths
+        eng_bbox = draw.textbbox((0, 0), english_text, font=font_eng)
+        eng_width = eng_bbox[2] - eng_bbox[0]
 
-        draw.text(
-            (40, 30),
-            one_line,
-            font=font_eng,
-            fill="white",
-            stroke_width=2,
-            stroke_fill="black"
-        )
+        trans_bbox = draw.textbbox((0, 0), translit_text, font=font_native)
+        trans_width = trans_bbox[2] - trans_bbox[0]
 
-    else:
+        native_bbox = draw.textbbox((0, 0), translated_word, font=font_native)
+        native_width = native_bbox[2] - native_bbox[0]
 
-        line1 = (
-            f"{english_word.upper()} "
-            f"({transliteration})"
-        )
+        total_width = eng_width + trans_width + native_width + 20
+
+        # If too long, switch to 2-line layout
+        if total_width > 760:
+
+            line1 = f"{english_word.upper()} ({transliteration})"
 
         draw.text(
             (40, 30),
@@ -193,7 +190,38 @@ def make_video(
             stroke_fill="black"
         )
 
-    # transliteration font for lower section if needed elsewhere
+    else:
+
+        # English
+        draw.text(
+            (40, 30),
+            english_text,
+            font=font_eng,
+            fill="white",
+            stroke_width=2,
+            stroke_fill="black"
+        )
+
+        # Transliteration + dash
+        draw.text(
+            (40 + eng_width + 5, 30),
+            translit_text,
+            font=font_native,
+            fill="white",
+            stroke_width=2,
+            stroke_fill="black"
+        )
+
+        # Translation
+        draw.text(
+            (40 + eng_width + trans_width + 10, 30),
+            translated_word,
+            font=font_native,
+            fill="white",
+            stroke_width=2,
+            stroke_fill="black"
+        )
+
     font_roman = get_font(latin_font, 40)
     
     # ===== DISCLAIMER TEXT =====
