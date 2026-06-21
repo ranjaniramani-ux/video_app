@@ -63,10 +63,6 @@ def make_video(
     print(f"      Original size: {img.size}, mode: {img.mode}")
     base = img.convert("RGB").resize((854, 480))
 
-    # overlay = Image.new("RGBA", (1280, 720), (0, 0, 0, 0))
-    # bar     = Image.new("RGBA", (1280, 180), (0, 0, 0, 100))  # 👈 lighter
-    # overlay.paste(bar, (0, 540))  # 👈 adjusted position
-
   
     # base = Image.alpha_composite(base.convert("RGBA"), overlay).convert("RGB")
     draw = ImageDraw.Draw(base)
@@ -76,121 +72,33 @@ def make_video(
     font_roman = get_font(latin_font, 40)
     font_eng = get_font(latin_font, 48)
     
-    # # Draw English word + dash
-    # top_text = f"{english_word.upper()} -"
 
-    # draw.text(
-    #     (40, 30),
-    #     top_text,
-    #     font=font_eng,
-    #     fill="white",
-    #     stroke_width=2,
-    #     stroke_fill="black"
-    # )
-
-    # # Calculate width of English text
-    # bbox = draw.textbbox((40, 30), top_text, font=font_eng)
-    # text_width = bbox[2] - bbox[0]
-
-    # # Draw translated word right next to it
-    # draw.text(
-    #     (40 + text_width + 10, 30),   # 👈 spacing after English
-    #     translated_word,
-    #     font=font_native,
-    #     fill="white",
-    #     stroke_width=2,
-    #     stroke_fill="black"
-    # )
-    
-
-    # # Transliteration
-    # if transliteration:
-    #     draw.text(
-    #         (40, 600),
-    #         transliteration,
-    #         font=font_roman,
-    #         fill="#ffe066",
-    #         stroke_width=1,
-    #         stroke_fill="black"
-    #     )
-    
-    # ===== HYBRID TITLE LAYOUT =====
-
-    eng_size = 48
-    native_size = 66
 
     max_width = 760
 
-    while True:
-        font_eng = get_font(latin_font, eng_size)
-        font_native = get_font(font_file, native_size)
+    eng_size = 30
+    native_size = 30
 
-        one_line = (
-            f"{english_word.upper()} "
-            f"({transliteration}) - "
-            f"{translated_word}"
-        )
+    font_eng = get_font(latin_font, eng_size)
+    font_native = get_font(font_file, native_size)
 
-        bbox = draw.textbbox((0, 0), one_line, font=font_eng)
-        line_width = bbox[2] - bbox[0]
+    english_text = english_word.upper()
+    translit_text = f" ({transliteration}) -"
 
-        if line_width <= max_width:
-            break
+    # Measure widths
+    eng_bbox = draw.textbbox((0, 0), english_text, font=font_eng)
+    eng_width = eng_bbox[2] - eng_bbox[0]
 
-        eng_size -= 2
+    trans_bbox = draw.textbbox((0, 0), translit_text, font=font_native)
+    trans_width = trans_bbox[2] - trans_bbox[0]
 
-        if eng_size < 24:
-            break
+    native_bbox = draw.textbbox((0, 0), translated_word, font=font_native)
+    native_width = native_bbox[2] - native_bbox[0]
 
-        # Recalculate with final font size
-        font_eng = get_font(latin_font, eng_size)
-        font_native = get_font(font_file, native_size)
+    total_width = eng_width + trans_width + native_width + 20
 
-        eng_size = 40
-        native_size = 40
-
-        font_eng = get_font(latin_font, eng_size)
-        font_native = get_font(font_file, native_size)
-
-        english_text = english_word.upper()
-        translit_text = f" ({transliteration}) -"
-
-        # Measure widths
-        eng_bbox = draw.textbbox((0, 0), english_text, font=font_eng)
-        eng_width = eng_bbox[2] - eng_bbox[0]
-
-        trans_bbox = draw.textbbox((0, 0), translit_text, font=font_native)
-        trans_width = trans_bbox[2] - trans_bbox[0]
-
-        native_bbox = draw.textbbox((0, 0), translated_word, font=font_native)
-        native_width = native_bbox[2] - native_bbox[0]
-
-        total_width = eng_width + trans_width + native_width + 20
-
-        # If too long, switch to 2-line layout
-        if total_width > 760:
-
-            line1 = f"{english_word.upper()} ({transliteration})"
-
-        draw.text(
-            (40, 30),
-            line1,
-            font=font_eng,
-            fill="white",
-            stroke_width=2,
-            stroke_fill="black"
-        )
-
-        draw.text(
-            (40, 95),
-            translated_word,
-            font=font_native,
-            fill="white",
-            stroke_width=2,
-            stroke_fill="black"
-        )
-
-    else:
+    # LONG WORDS -> 2 lines
+    if total_width > 760:
 
         # English
         draw.text(
@@ -202,7 +110,38 @@ def make_video(
             stroke_fill="black"
         )
 
-        # Transliteration + dash
+        # Transliteration
+        draw.text(
+            (40 + eng_width + 5, 30),
+            f"({transliteration})",
+            font=font_native,
+            fill="white",
+            stroke_width=2,
+            stroke_fill="black"
+        )
+
+        # Translation on second line
+        draw.text(
+            (40, 95),
+            translated_word,
+            font=font_native,
+            fill="white",
+            stroke_width=2,
+            stroke_fill="black"
+        )
+
+    # SHORT WORDS -> 1 line
+    else:
+
+        draw.text(
+            (40, 30),
+            english_text,
+            font=font_eng,
+            fill="white",
+            stroke_width=2,
+            stroke_fill="black"
+        )
+
         draw.text(
             (40 + eng_width + 5, 30),
             translit_text,
@@ -212,7 +151,6 @@ def make_video(
             stroke_fill="black"
         )
 
-        # Translation
         draw.text(
             (40 + eng_width + trans_width + 10, 30),
             translated_word,
@@ -221,13 +159,11 @@ def make_video(
             stroke_width=2,
             stroke_fill="black"
         )
-
-    font_roman = get_font(latin_font, 40)
     
     # ===== DISCLAIMER TEXT =====
     disclaimer_text = "© Learning Matters | Images: Unsplash | Educational Use Only"
 
-    font_disclaimer = get_font(latin_font, 22)
+    font_disclaimer = get_font(latin_font, 16)
 
     # get text size for centering
     bbox = draw.textbbox((0, 0), disclaimer_text, font=font_disclaimer)
@@ -258,7 +194,8 @@ def make_video(
     tmp_audio = f"voice_tmp_{os.getpid()}.mp3"
 
     tts = gTTS(
-        text=f"{english_word}. ... {english_word}. ... {english_word}.",
+        #text=f"{english_word}. ... {english_word}. ... {english_word}.",
+        text=english_word,
         lang="en",
         # for indian accent
         tld="co.in"
@@ -270,20 +207,27 @@ def make_video(
     from moviepy import ImageClip, AudioFileClip, CompositeAudioClip, AudioClip
     
     speech = AudioFileClip(tmp_audio)
+    speech1 = AudioFileClip(tmp_audio)
+    speech2 = AudioFileClip(tmp_audio)
+    first_start = 3
+    second_start = first_start + speech1.duration + 1.5
 
-    # slow down speech
+    final_audio = CompositeAudioClip([
+        speech1.with_start(first_start),
+        speech2.with_start(second_start)
+    ])
+
+    total_duration = second_start + speech2.duration + 1
+    
+    print("Speech duration:", speech1.duration)
+    print("First start:", first_start)
+    print("Second start:", second_start)
+    
     
     # speech = speech.fx(lambda clip: clip.with_speed_scaled(0.7))
     # speech = speech.with_speed_scaled(0.7)
 
-    silence = AudioClip(lambda t: 0, duration=3)
-
-  
-
-    # speech = AudioFileClip(tmp_audio)
-    # silence = AudioClip(lambda t: 0, duration=5)
-    final_audio = CompositeAudioClip([silence, speech.with_start(3)])
-    total_duration = 3 + speech.duration
+    
 
     clip = ImageClip(tmp_frame).with_duration(total_duration)
 

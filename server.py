@@ -15,6 +15,8 @@ import os
 import imageio_ffmpeg
 
 os.environ["IMAGEIO_FFMPEG_EXE"] = imageio_ffmpeg.get_ffmpeg_exe()
+FFMPEG_EXE = imageio_ffmpeg.get_ffmpeg_exe()
+print("FFMPEG:", FFMPEG_EXE)
 
 app = Flask(__name__)
 
@@ -246,7 +248,7 @@ def merge():
 
         # Merge using ffmpeg (MUCH lower RAM usage)
         subprocess.run([
-            "ffmpeg",
+            FFMPEG_EXE,
             "-f", "concat",
             "-safe", "0",
             "-i", concat_file,
