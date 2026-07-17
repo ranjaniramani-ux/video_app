@@ -13,6 +13,7 @@ import uuid
 import sys
 import os
 import imageio_ffmpeg
+import eng_to_ipa as ipa
 
 os.environ["IMAGEIO_FFMPEG_EXE"] = imageio_ffmpeg.get_ffmpeg_exe()
 FFMPEG_EXE = imageio_ffmpeg.get_ffmpeg_exe()
@@ -55,6 +56,8 @@ LANG_FONT = {
 
 LATIN_FONT = "NotoSans-Regular.ttf"
 
+def ipa_test(word):
+    return ipa.convert(word)
 
 def english_to_native_script(english_word: str, language: str) -> str:
     """
@@ -104,8 +107,8 @@ def translate_route():
 
         # 2. Write the English word phonetically IN the native script
         #    so kids can sound out the English pronunciation
-        transliteration = english_to_native_script(word, language)
-
+        #transliteration = english_to_native_script(word, language)
+        transliteration = ipa_test(word)
         print(f"  '{word}' → '{translated}' | phonetic: '{transliteration}'")
 
         return jsonify({
